@@ -1,0 +1,6 @@
+{
+  // The tests, compiled to dist-test/; they import the BUILT package (../dist/*.js).
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "rootDir": "test", "outDir": "dist-test", "declaration": false },
+  "include": ["test"]
+}
