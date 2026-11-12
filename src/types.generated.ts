@@ -240,8 +240,8 @@ export type ApiSupportCsat = {
 /** Who the customer is, as the company knows them. At most 16 fields; names are 1 to 40 letters, digits, `_`, `-` or `.`; values are strings of at most 200 plain characters, numbers or booleans; at most 2 KB in all. Shown to the company's own agents and webhooks only, and never written to the audit trail (only the field names are). */
 export type ApiSupportCustomer = Record<string, string | number | boolean | null>;
 
-/** Why it ended: `stopped` (the customer pressed Stop), `disconnected` (their tab or app went away), `expired` (reached `expires_at`), `ended_by_api` (`POST /support/sessions/{id}/end`). `null` while open. */
-export type ApiSupportEndReason = "stopped" | "disconnected" | "expired" | "ended_by_api" | null;
+/** Why it ended: `stopped` (the customer pressed Stop), `customer_cancelled` (the customer, or their app, stopped while still waiting: no agent had joined), `disconnected` (their tab or app went away), `expired` (reached `expires_at`), `ended_by_api` (`POST /support/sessions/{id}/end`). `null` while open. */
+export type ApiSupportEndReason = "stopped" | "customer_cancelled" | "disconnected" | "expired" | "ended_by_api" | null;
 
 /** Your own id for the session (a ticket, a user), 1 to 128 printable ASCII characters. Echoed back and in webhooks; filter the list by it. From a publishable key it is what the page said. */
 export type ApiSupportExternalId = string;
@@ -275,6 +275,34 @@ export type ApiSupportMode = "view" | "cobrowse";
 
 /** The agents' outcome tag: `resolved`, `follow_up` or `bug`; `null` until set. */
 export type ApiSupportOutcome = "resolved" | "follow_up" | "bug" | null;
+
+/** The waiting alert's push channel, and the caller's own subscriptions. */
+export interface ApiSupportPush {
+  object: "support_push";
+  /** `ok`, or `push not configured` (this server has no VAPID key: nothing is pushed). */
+  status: "ok" | "push not configured";
+  /** The server's VAPID public key (an uncompressed P-256 point, base64url), for `applicationServerKey`; `null` when not configured. */
+  public_key: string | null;
+  subscriptions: Array<ApiSupportPushSubscription>;
+}
+
+export interface ApiSupportPushSubscription {
+  object: "support_push_subscription";
+  id: string;
+  endpoint: string;
+  created_at: number;
+}
+
+/** A browser's `PushSubscription.toJSON()` (other fields, such as `expirationTime`, are ignored). */
+export interface ApiSupportPushSubscriptionCreate {
+  endpoint: string;
+  keys: {
+    /** The browser's P-256 public key, base64url (65 bytes). */
+    p256dh: string;
+    /** The 16-byte authentication secret, base64url. */
+    auth: string;
+  };
+}
 
 export interface ApiSupportRating {
   object: "support_rating";
@@ -476,6 +504,15 @@ export interface ApiSupportSessionEvent {
 export interface ApiSupportSessionList {
   sessions: Array<ApiSupportSession>;
 }
+
+/** One event of `GET /support/sessions/stream`; its `event` field names it (as the SSE `event:` line does). */
+export type ApiSupportSessionStreamEvent = {
+  event: "ready";
+} | ({
+  event: "support_session";
+  /** The session that changed; `null` after the stream fell behind (re-read the list). */
+  id: string | null;
+});
 
 export interface ApiSupportSessionUpdate {
   /** Private to the company's agents (never the customer's to see). At most 4000 characters; `null` clears. */
