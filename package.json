@@ -22,7 +22,7 @@
     "typecheck:examples": "tsc -p tsconfig.examples.json",
     "gen": "node --experimental-strip-types scripts/gen-types.mts",
     "clean": "node -e \"for (const d of ['dist', 'dist-test']) require('node:fs').rmSync(d, { recursive: true, force: true })\"",
-    "test": "npm run clean && npm run build && npm run build:test && npm run typecheck:examples && node --test dist-test/",
+    "test": "npm run clean && npm run build && npm run build:test && npm run typecheck:examples && cd dist-test && node --test",
     "prepack": "npm run clean && npm run build"
   },
   "devDependencies": {
